@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SplitType {
+  EVEN
+  EXACT
+  PERCENTAGE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  userid       String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  trips        Trip[]
+}
+
+model Trip {
+  id              String           @id @default(cuid())
+  name            String
+  createdById     String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  finalizedAt     DateTime?
+  creator         User             @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  participants    Participant[]
+  expenses        Expense[]
+  settlements     Settlement[]
+  publicBillLinks PublicBillLink[]
+
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model Participant {
+  id              String         @id @default(cuid())
+  tripId          String
+  name            String
+  order           Int            @default(0)
+  userId          String?
+  trip            Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidExpenses    Expense[]      @relation("ExpensePayer")
+  expenseSplits   ExpenseSplit[]
+  fromSettlements Settlement[]   @relation("SettlementFrom")
+  toSettlements   Settlement[]   @relation("SettlementTo")
+  billLinks       PublicBillLink[]
+
+  @@unique([tripId, name])
+  @@index([tripId])
+}
+
+model Expense {
+  id                  String        @id @default(cuid())
+  tripId              String
+  title               String
+  amount              Decimal       @db.Decimal(12, 2)
+  paidByParticipantId String
+  splitType           SplitType     @default(EVEN)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  trip                Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  payer               Participant   @relation("ExpensePayer", fields: [paidByParticipantId], references: [id], onDelete: Restrict)
+  splits              ExpenseSplit[]
+
+  @@index([tripId])
+  @@index([paidByParticipantId])
+}
+
+model ExpenseSplit {
+  id            String      @id @default(cuid())
+  expenseId     String
+  participantId String
+  shareAmount   Decimal     @db.Decimal(12, 2)
+  percentage    Decimal?    @db.Decimal(6, 3)
+  expense       Expense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, participantId])
+  @@index([expenseId])
+  @@index([participantId])
+}
+
+model Settlement {
+  id                String      @id @default(cuid())
+  tripId            String
+  fromParticipantId String
+  toParticipantId   String
+  amount            Decimal     @db.Decimal(12, 2)
+  createdAt         DateTime    @default(now())
+  trip              Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  fromParticipant   Participant @relation("SettlementFrom", fields: [fromParticipantId], references: [id], onDelete: Cascade)
+  toParticipant     Participant @relation("SettlementTo", fields: [toParticipantId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([fromParticipantId])
+  @@index([toParticipantId])
+}
+
+model PublicBillLink {
+  id            String      @id @default(cuid())
+  tripId        String
+  participantId String
+  token         String      @unique
+  createdAt     DateTime    @default(now())
+  trip          Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, participantId])
+  @@index([participantId])
+}

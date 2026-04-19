@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f8f9;
+  --foreground: #18181b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans:
+    "Satoshi", "Avenir Next", "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, "Roboto",
+    sans-serif;
+}
+
+* {
+  border-color: rgb(228 228 231);
+}
+
+body {
+  background: radial-gradient(circle at top left, #ecfdf5 0%, #f7f8f9 25%, #f7f8f9 100%);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+html.dark {
+  --background: #000000;
+  --foreground: #f4f4f5;
+}
+
+html.dark body {
+  background: #000000;
+  color: var(--foreground);
+}
+
+html.dark .bg-white {
+  background-color: #0a0a0a !important;
+}
+
+html.dark .bg-zinc-50 {
+  background-color: #121214 !important;
+}
+
+html.dark .border-zinc-200,
+html.dark .border-zinc-300 {
+  border-color: #2a2a2e !important;
+}
+
+html.dark .text-zinc-900 {
+  color: #f4f4f5 !important;
+}
+
+html.dark .text-zinc-800,
+html.dark .text-zinc-700,
+html.dark .text-zinc-600,
+html.dark .text-zinc-500 {
+  color: #d4d4d8 !important;
+}
